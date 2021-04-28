@@ -1,54 +1,13 @@
 package com.example.search_lab.algorithm.text;
 
+import com.example.search_lab.util.Pair;
 import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 @Component
 public final class NaiveLargestSubstringSearch implements LargestSubstringSearch {
-
-    private static class Pair {
-
-        private final int i;
-        private final int j;
-
-        public Pair(int i, int j) {
-            this.i = i;
-            this.j = j;
-        }
-
-        public int getI() {
-            return i;
-        }
-
-        public int getJ() {
-            return j;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            Pair pair = (Pair) o;
-            return i == pair.i &&
-                    j == pair.j;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(i, j);
-        }
-
-        @Override
-        public String toString() {
-            return "Pair{" +
-                    "i=" + i +
-                    ", j=" + j +
-                    '}';
-        }
-    }
 
     @Override
     public String getLargestSubsequence(String text) {
@@ -61,14 +20,14 @@ public final class NaiveLargestSubstringSearch implements LargestSubstringSearch
         }
         fillPyramid(pyramid, text);
 
-        Set<Pair> visitedCoordinates = new HashSet<>();
+        Set<Pair<Integer>> visitedCoordinates = new HashSet<>();
         int biggestLength = 0;
-        Pair indexes = null;
+        Pair<Integer> indexes = null;
         for (int i = 1; i < pyramid.length; i++) {
             int[] row = pyramid[i];
             for (int j = 0; j < row.length - 1; j++) {
                 int element = pyramid[i][j];
-                Pair pair = new Pair(i, j);
+                Pair<Integer> pair = new Pair<>(i, j);
                 if (element == 1 && !visitedCoordinates.contains(pair)) {
                     int x = i;
                     int y = j;
@@ -82,7 +41,7 @@ public final class NaiveLargestSubstringSearch implements LargestSubstringSearch
                         }
                         if (length > biggestLength) {
                             biggestLength = length;
-                            indexes = new Pair(i, x);
+                            indexes = new Pair<>(i, x);
                             visitedCoordinates.add(indexes);
                         }
                     }
@@ -92,7 +51,7 @@ public final class NaiveLargestSubstringSearch implements LargestSubstringSearch
         if (indexes == null) {
             return "";
         }
-        return text.substring(indexes.getI(), indexes.getJ() + 1);
+        return text.substring(indexes.getFirst(), indexes.getSecond() + 1);
     }
 
     private void fillPyramid(int[][] pyramid, String content) {

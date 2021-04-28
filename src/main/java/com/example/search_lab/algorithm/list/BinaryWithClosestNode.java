@@ -36,8 +36,6 @@ public final class BinaryWithClosestNode implements SortedListSearch {
                 delta += delta;
             }
         }
-        System.out.println(from + " | " + to);
-        System.out.println(list.subList(from, to));
         return indexOfClosestLesserElement(list, key, from, to);
     }
 

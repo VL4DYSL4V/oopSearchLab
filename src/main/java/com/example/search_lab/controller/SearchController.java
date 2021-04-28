@@ -7,6 +7,8 @@ import com.example.search_lab.algorithm.text.*;
 import com.example.search_lab.entity.ListCommonEntity;
 import com.example.search_lab.entity.ListSearchEntity;
 import com.example.search_lab.entity.StringSearchEntity;
+import com.example.search_lab.util.Pair;
+import com.example.search_lab.util.StringUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,14 +39,15 @@ public final class SearchController {
 
     @GetMapping("/subsequence")
     @ResponseBody
-    public Map<Character, Integer> findSubsequence(@RequestBody StringSearchEntity stringSearchEntity){
+    public Map<Character, Integer> findSubsequence(@RequestBody StringSearchEntity stringSearchEntity) {
         TextSubsequenceSearch textSubsequenceSearch =
                 applicationContext.getBean("simpleSubsequenceSearch", TextSubsequenceSearch.class);
         return textSubsequenceSearch.search(stringSearchEntity.getText(), stringSearchEntity.getSample());
     }
+
     @GetMapping("/common")
     @ResponseBody
-    public List<Integer> findCommon(@RequestBody ListCommonEntity listCommonEntity){
+    public List<Integer> findCommon(@RequestBody ListCommonEntity listCommonEntity) {
         CommonElementsSearch commonElementsSearch =
                 applicationContext.getBean("sortedCommonElementsSearch", CommonElementsSearch.class);
         return commonElementsSearch.common(listCommonEntity.getFirst(), listCommonEntity.getSecond());
@@ -50,21 +55,21 @@ public final class SearchController {
 
     @GetMapping("/interpolation-search")
     @ResponseBody
-    public int interpolationSearch(@RequestBody ListSearchEntity listSearchEntity){
+    public int interpolationSearch(@RequestBody ListSearchEntity listSearchEntity) {
         SortedListSearch sortedListSearch = applicationContext.getBean("interpolationSearch", SortedListSearch.class);
         return sortedListSearch.search(listSearchEntity.getData(), listSearchEntity.getElement());
     }
 
     @GetMapping("/binary-with-closest-node")
     @ResponseBody
-    public int binaryWithClosestNode(@RequestBody ListSearchEntity listSearchEntity){
+    public int binaryWithClosestNode(@RequestBody ListSearchEntity listSearchEntity) {
         SortedListSearch sortedListSearch = applicationContext.getBean("binaryWithClosestNode", SortedListSearch.class);
         return sortedListSearch.search(listSearchEntity.getData(), listSearchEntity.getElement());
     }
 
     @GetMapping("/precise-search")
     @ResponseBody
-    public List<Integer> preciseSearch(@RequestBody StringSearchEntity stringSearchEntity){
+    public List<Integer> preciseSearch(@RequestBody StringSearchEntity stringSearchEntity) {
         PreciseSubstringSearch preciseSubstringSearch =
                 applicationContext.getBean("knutMorrisPrattSearch", PreciseSubstringSearch.class);
         return preciseSubstringSearch.search(stringSearchEntity.getText(), stringSearchEntity.getSample());
@@ -72,15 +77,25 @@ public final class SearchController {
 
     @GetMapping("/wagner-fisher")
     @ResponseBody
-    public int levenshteinDistance(@RequestBody StringSearchEntity stringSearchEntity){
+    public Map<String, Integer> levenshteinDistance(@RequestBody StringSearchEntity stringSearchEntity) {
         LevenshteinDistanceSearch levenshteinDistanceSearch =
                 applicationContext.getBean("wagnerFischerDistanceSearch", LevenshteinDistanceSearch.class);
-        return levenshteinDistanceSearch.getDistance(stringSearchEntity.getText(), stringSearchEntity.getSample());
+        int distance = levenshteinDistanceSearch.getDistance(stringSearchEntity.getText(), stringSearchEntity.getSample());
+        CommonElementsSearch commonElementsSearch
+                = applicationContext.getBean("sortedCommonElementsSearch", CommonElementsSearch.class);
+        List<Integer> textAscii = StringUtils.getAsciiCodes(stringSearchEntity.getText());
+        List<Integer> sampleAscii = StringUtils.getAsciiCodes(stringSearchEntity.getSample());
+        textAscii.sort(Comparator.naturalOrder());
+        sampleAscii.sort(Comparator.naturalOrder());
+        List<Integer> common = commonElementsSearch.common(textAscii, sampleAscii);
+        return new HashMap<String, Integer>() {{
+            put(StringUtils.convertFromAscii(common), distance);
+        }};
     }
 
     @GetMapping("/lis")
     @ResponseBody
-    public int lis(@RequestBody ListSearchEntity listSearchEntity){
+    public int lis(@RequestBody ListSearchEntity listSearchEntity) {
         SequenceSearch sequenceSearch =
                 applicationContext.getBean("longestIncreasingSequence", SequenceSearch.class);
         return sequenceSearch.getSequenceLength(listSearchEntity.getData());
@@ -88,9 +103,9 @@ public final class SearchController {
 
     @GetMapping("/landau-vishkin")
     @ResponseBody
-    public List<Integer> getIndexesOfMatchingSubstrings(
+    public List<Pair<Integer>> getIndexesOfMatchingSubstrings(
             @RequestBody StringSearchEntity stringSearchEntity,
-            @RequestParam(value = "mismatchAmount", required = true) int mismatchAmount){
+            @RequestParam(value = "mismatchAmount", required = true) int mismatchAmount) {
         MismatchSearch landauVishkinAlgorithm =
                 applicationContext.getBean("landauVishkinAlgorithm", MismatchSearch.class);
         return landauVishkinAlgorithm
@@ -99,13 +114,10 @@ public final class SearchController {
 
     @GetMapping("/largest-repeated-substring")
     @ResponseBody
-    public String findLargestSubstring(@RequestBody StringSearchEntity stringSearchEntity){
+    public String findLargestSubstring(@RequestBody StringSearchEntity stringSearchEntity) {
         LargestSubstringSearch largestSubstringSearch =
                 applicationContext.getBean("naiveLargestSubstringSearch", LargestSubstringSearch.class);
         return largestSubstringSearch.getLargestSubsequence(stringSearchEntity.getText());
     }
 
-    // TODO: 23.04.2021 algorithms 5?
-
-    
 }
